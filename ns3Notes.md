@@ -11,14 +11,14 @@
 - Basic abstraction for a user program that **generates some activity to be simulated**
 - Represented by class ```Application``` in ```cpp```
 - _clients_ and _servers_ are one type of applications
->  *``` Application Class```*
+>  **``` Application Class```**
 > provides methods for **managing _representations_** of our version of user-level applications in simulations
 ### 3. Channel 
 - Basic communicstion subnetwork abstraction
 - Media over which **data flows** in networks
 -  Represented by class ```Channel``` in ```cpp```
 -  can model anything from a simple wire to a complex Ethernet Switch
->  *``` Channel Class```*
+>  **``` Channel Class```**
 > provides methods for **managing _communication_** subnetwork objects and connecting nodes to them.
 ### 4. Net Device
 - Enable the Node to **communicate** with other Nodes in the simulation via ```Channels```
@@ -26,7 +26,7 @@
 - Covers both the software driver and the simulated hardware
 -  Represented by class ```NetDevice``` in ```cpp```
 -  For a specific channel specific type of Net Device is used
->``` NetDevice Class```
+>**``` NetDevice Class```**
 >provides methods for **managing _connections_** to Node and Channel objects
 ### 5. Topology Helpers
 - Enable to easily create a certain topology with given Nodes, Net Devices and Channels
@@ -40,20 +40,24 @@
 **LOG Functionality** :  Macros which allow developers to send information to the ```std::clog``` output stream.
 #### There are currently **seven** levels of log messages of increasing verbosity defined in the system.
 >```NS_LOG_ERROR``` — Log error messages;
-```NS_LOG_WARN``` — Log warning messages;
-```NS_LOG_DEBUG``` — Log relatively rare, ad-hoc debugging messages;
-```NS_LOG_INFO``` — Log informational messages about program progress;
-```NS_LOG_FUNCTION``` — Log a message describing each function called;
-```NS_LOG_LOGIC``` – Log messages describing logical flow within a function;
-```NS_LOG_ALL``` — Log everything.
-
+>>```NS_LOG_WARN``` — Log warning messages;
+>>>```NS_LOG_DEBUG``` — Log relatively rare, ad-hoc debugging messages;
+>>>>```NS_LOG_INFO``` — Log informational messages about program progress;
+>>>>>```NS_LOG_FUNCTION``` — Log a message describing each function called;
+>>>>>>```NS_LOG_LOGIC``` – Log messages describing logical flow within a function;
+>>>>>>>```NS_LOG_ALL``` — Log everything.
+- ####  ```NS_LOG_UNCOND``` :  an unconditional logging macro that is _always displayed_ , irrespective of logging levels or component selection. (no associated log level).
 ```cpp
 NS_LOG_COMPONENT_DEFINE ("FirstScriptExample");
 ```
-- Define a Log component with a specific name 
-- Allows you to enable and disable console message logging by reference to the name **FirstScriptExample**
+- Define a Log component with a specific name .
+- Allows you to enable and disable console message logging by reference to the name **FirstScriptExample**.
 - This macro defines a new "log component" which can be later selectively enabled or disabled with the **ns3::LogComponentEnable** and **ns3::LogComponentDisable** functions or with the _NS_LOG_ environment variable.
-
+- For each ```LOG_TYPE``` there is also ```LOG_LEVEL_TYPE``` that, if used, enables logging of all the levels above it in addition to it’s level.
+#### Command for extremely verbose Logging (_Logs all_)  : 
+```bash
+export 'NS_LOG=UdpEchoClientApplication=level_all|prefix_func: UdpEchoServerApplication=level_all|prefix_func'
+ ```
 ## First Tutorial Notes
  #### ``` Time::SetResolution(Time::NS)```
 > - This is used to set smallest representable time (resolution) to nanoseconds(NS) 
@@ -95,3 +99,102 @@ After executing the `pointToPoint.Install  (nodes)` call we will have two nodes,
 >
 > #### Association between IP address and device is done using `IPv4Interface` object
 > 
+#### ```Simulator::Run ();```
+> - System starts looking through the list of scheduled events and executes them.
+> - The Events are executed according to time specified or scheduled
+> - the simulation proceeds by executing events in the temporal order of simulation time
+
+### Stopping Simulation
+- A processed event may generate zero or more events. So consumed event may generate more events to be consumed
+- When event queue is empty simulation stops
+- ```Simulator: : Stop``` can also cause simulation to stop
+- It's necessary to call ```Stop``` in case of recurring events
+> Some Recurring Events are
+>> - Flow Monitor - lost packet check
+>> - Periodic Broadcasters for updating Routing Tables
+
+It is important to call `Simulator::Stop`  _before_ calling `Simulator::Run`; otherwise, `Simulator::Run` may never return control to the main program to execute the stop !
+## Command Line Arguments
+Way to change how _ns-3_ scripts behave without editing and building is via _command line arguments_
+### A. Overriding Defaults
+ 
+ 1. Declare command line parser
+ ```cpp
+ int main (int argc, char *argv[])
+{
+  ...
+  CommandLine cmd;
+  cmd.Parse (argc, argv);
+  ...
+}
+ ```
+ 2. Pass arguments with ```./waf --run``` command to the script
+ ```bash
+ ./waf --run "scratch/myfirst --PrintHelp"
+ ```
+####  Print Options Present as arguments :
+ >**`--PrintHelp`** : Print this help message.
+**`--PrintGroups`** : Print the list of groups.
+**`--PrintTypeIds`** : Print all TypeIds.
+**`--PrintGroup=[group]`** : Print all TypeIds of group.
+**`--PrintAttributes=[typeid]`** : Print all attributes of typeid.
+**`--PrintGlobals`** : Print the list of globals.
+
+Example
+```bash
+./waf --run "scratch/myfirst --PrintAttributes=ns3::PointToPointNetDevice"
+```
+> #### - Prints all `Attributes` of this kind of Net Device
+ 3. To set attributes :
+> ```bash
+>./waf --run "scratch/myfirst -- ns3::PointToPointNetDevice::DataRate=5Mbps"
+ >```
+ >The Example sets DataRate of channel to 5 Mb/s
+ 4. To find existing commands
+ - Most important command which can be used to identify if certain commands exist is **```--PrintGroup=[Group]```** 
+ - Here ```[Group]``` is any module name from `src` directory of _ns-3_
+ - Example :
+ ```bash
+ $ ./waf --run "scratch/myfirst --PrintGroup=PointToPoint"
+TypeIds in group PointToPoint:
+  ns3::PointToPointChannel
+  ns3::PointToPointNetDevice
+  ns3::PointToPointRemoteChannel
+  ns3::PppHeader
+  ```
+### B. Hooking Own Values
+- To add hooks `AddValue` method of `CommandLine` class is used 
+ ```cpp
+ int main (int argc, char *argv[])
+{
+uint32_t nPackets = 1;
+ CommandLine cmd;
+ cmd.AddValue("nPackets", "Number of packets to echo", nPackets);
+ cmd.Parse (argc, argv);
+... 
+ ```
+ - To use them from command line set them as you set default attributes
+ ```bash
+ $ ./waf --run "scratch/myfirst --nPackets=2"
+ ```
+ -  **Don't forget** to pass the argument to actual place where you set the attributes 
+ ```cpp
+echoClient.SetAttribute ("MaxPackets", UintegerValue (nPackets));
+ ``` 
+## Tracing
+- Standard C++ facilities can be used to generate output for tracing
+- Logging is used to add structure
+### Goals of tracing Subsystem
+1. Allow user to generate **tracing for popular tracing sources** and **customize** which objects generate tracing
+2. Extend tracing to **modify generated output format** or add new tracing sources without modifying core
+3. **Modify core** to add new sources and sinks
+#### A. Trace Sources 
+- Entities that can **signal events that happen** in a simulation and provide **access to interesting underlying data**
+- A trace source could indicate when a packet is received by a net device and provide **access to the packet contents** for interested trace sinks
+- Trace sources are **not useful by themselves**, they must be “connected” to other pieces of code that actually do something useful with the information provided by the sink
+#### B. Trace Sinks
+- **Consumers** of the events and data provided by the trace sources.
+-A trace sink could print out interesting parts of the received packet from trace source
+### ASCII Tracing
+
+
