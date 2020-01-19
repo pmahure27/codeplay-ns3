@@ -123,7 +123,7 @@ void showLocation(NodeContainer c)
        Ptr<MobilityModel> position = object->GetObject<MobilityModel> ();
        NS_ASSERT (position != 0);
        Vector pos = position->GetPosition ();
-       std::cout << "x=" << pos.x << ", y=" << pos.y << ", z=" << pos.z << std::endl;
+       std::cout << "x=" << pos.x << ", y=" << pos.y /*<< ", z=" << pos.z */<< std::endl;
        double uhy =sqrt(((pos.x-3)*(pos.x-3))+((pos.y-3)*(pos.y-3)));
        std::cout << uhy << std::endl;
        if(uhy <= 10 )
@@ -136,7 +136,7 @@ void showLocation(NodeContainer c)
 int main (int argc, char *argv[])
 {
   std::string phyMode ("DsssRate1Mbps");
-  double distance = 500;  // m
+  double distance = 100;  // m
   uint32_t packetSize = 1000; // bytes
   uint32_t numPackets = 1000;
   uint32_t numNodes = 36;  // by default, 5x5
@@ -177,7 +177,7 @@ int main (int argc, char *argv[])
 
   YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
   // set it to zero; otherwise, gain will be added
-  wifiPhy.Set ("RxGain", DoubleValue (-10) );
+  wifiPhy.Set ("RxGain", DoubleValue (0) );
   // ns-3 supports RadioTap and Prism tracing extensions for 802.11b
   wifiPhy.SetPcapDataLinkType (WifiPhyHelper::DLT_IEEE802_11_RADIO);
 
@@ -231,6 +231,8 @@ int main (int argc, char *argv[])
   recvSink->Bind (local);
   recvSink->SetRecvCallback (MakeCallback (&ReceivePacket));
 
+  //MakeCallback (&showLocation);
+
   Ptr<Socket> source = Socket::CreateSocket (c.Get (sourceNode), tid);
   InetSocketAddress remote = InetSocketAddress (i.GetAddress (sinkNode, 0), 80);
   source->Connect (remote);
@@ -252,8 +254,9 @@ int main (int argc, char *argv[])
   // Give OLSR time to converge-- 30 seconds perhaps
   Simulator::Schedule (Seconds (30.0), &GenerateTraffic,
                        source, packetSize, numPackets, interPacketInterval);
+  Simulator::Schedule (Seconds (30.0), &showLocation, c);
 
-  Simulator:: Schedule (Seconds(10.0), &showLocation, c);
+  //Simulator:: Schedule (Seconds(40.0), &showLocation, recvSink, c);
 
 
 
@@ -261,8 +264,8 @@ int main (int argc, char *argv[])
   NS_LOG_UNCOND ("Testing from node " << sourceNode << " to " << sinkNode << " with grid distance " << distance);
 
   AnimationInterface anim ("test1.xml");
-  
-  Simulator::Stop (Seconds (120.0));
+
+  Simulator::Stop (Seconds (90.0));
   Simulator::Run ();
   Simulator::Destroy ();
 
