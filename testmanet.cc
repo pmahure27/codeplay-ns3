@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 	uint32_t numPkts = 1000;
 	uint32_t numNodes = 10;
 	uint32_t sinkNode = 0;
-	uint32_t sourceNode = 9;
+	uint32_t sourceNode = 9	;
 	double interval = 2;
 	bool verbose = false;
 	bool tracing = false;
