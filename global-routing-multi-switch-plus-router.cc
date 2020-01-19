@@ -803,8 +803,8 @@ main (int argc, char *argv[])
   NS_LOG_INFO ("Run Simulation for " << simDurationSeconds << " seconds.");
 
   Simulator::Stop (Seconds (simDurationSeconds));
-  Simulator::Run ();
   AnimationInterface anim ("test1.xml");
+  Simulator::Run ();
   //anim.SetConstantPosition(t2,25.00,2.0);
   //anim.SetConstantPosition(b2,3.0,40.0); 
   Simulator::Destroy ();
