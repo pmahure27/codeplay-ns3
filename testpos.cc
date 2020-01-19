@@ -34,11 +34,13 @@ int main(int argc, char const *argv[])
 	Config::SetDefault ("ns3::RandomWalk2dMobilityModel::Mode", StringValue ("Time"));
   Config::SetDefault ("ns3::RandomWalk2dMobilityModel::Time", StringValue ("2s"));
   Config::SetDefault ("ns3::RandomWalk2dMobilityModel::Speed", StringValue ("ns3::ConstantRandomVariable[Constant=1.0]"));
-  Config::SetDefault ("ns3::RandomWalk2dMobilityModel::Bounds", StringValue ("0|200|0|200"));
+  Config::SetDefault ("ns3::RandomWalk2dMobilityModel::Bounds", StringValue ("0|500|0|500"));
 
   
 	NodeContainer c;
-	c.Create(100);
+	c.Create(50);
+	NodeContainer d;
+	d.Create(50);
 	WifiHelper wifi;
 	std::string phyMode("DsssRate1Mbps");
 	 Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",
@@ -60,27 +62,40 @@ int main(int argc, char const *argv[])
                                 "ControlMode",StringValue (phyMode));
 
   wifiMac.SetType ("ns3::AdhocWifiMac");
-  NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);
+  //NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);
 
   MobilityHelper mobility;
   mobility.SetPositionAllocator ("ns3::RandomDiscPositionAllocator",
-                                 "X", StringValue ("100.0"),
-                                 "Y", StringValue ("100.0"),
-                                 "Rho", StringValue ("ns3::UniformRandomVariable[Min=0|Max=30]"));
-  /*mobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel",
+                                 "X", StringValue ("200.0"),
+                                 "Y", StringValue ("80.0"),
+                                 "Rho", StringValue ("ns3::UniformRandomVariable[Min=30|Max=60]"));
+  mobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel",
                              "Mode", StringValue ("Time"),
                              "Time", StringValue ("2s"),
                              "Speed", StringValue ("ns3::ConstantRandomVariable[Constant=1.0]"),
-                             "Bounds", StringValue ("0|200|0|200"));
-  */
-  mobility.InstallAll ();
-  Config::Connect ("/NodeList/*/$ns3::MobilityModel/CourseChange",
-                   MakeCallback (&CourseChange));
+                             "Bounds", StringValue ("0|500|0|500"));
+  //mobility.InstallAll ();
+  Config::Connect ("/NodeList/*/$ns3::MobilityModel/CourseChange",MakeCallback (&CourseChange));
 
   // finalize the setup by attaching to each object
   // in the input array a position and initializing
   // this position with the calculated coordinates.
+
+
+  MobilityHelper mobility1;
+  mobility1.SetPositionAllocator ("ns3::RandomDiscPositionAllocator",
+                                 "X", StringValue ("70.0"),
+                                 "Y", StringValue ("80.0"),
+                                 "Rho", StringValue ("ns3::UniformRandomVariable[Min=30|Max=60]"));
+  mobility1.SetMobilityModel ("ns3::RandomWalk2dMobilityModel",
+                             "Mode", StringValue ("Time"),
+                             "Time", StringValue ("2s"),
+                             "Speed", StringValue ("ns3::ConstantRandomVariable[Constant=1.0]"),
+                             "Bounds", StringValue ("0|500|0|500"));
+  //Config::Connect ("/NodeList/*/$ns3::MobilityModel/CourseChange",MakeCallback (&CourseChange));
+
   mobility.Install (c);
+  mobility1.Install (d);
   AnimationInterface anim ("manet.xml");
 
   Simulator::Stop (Seconds (90.0));
